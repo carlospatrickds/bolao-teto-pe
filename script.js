@@ -73,18 +73,31 @@ async function fetchData() {
     }
 }
 
-// Parser simples de CSV
+// Parser de CSV com Sanitização
 function parseCSV(csv) {
-    // Divide por linhas e trata aspas simples do CSV gerado pelo Google
+    // Divide o arquivo em linhas, removendo linhas totalmente vazias
     const lines = csv.split('\n').filter(line => line.trim() !== '');
     if (lines.length === 0) return;
 
-    // Extrai cabeçalhos
-    appData.headers = lines[0].split(',').map(h => h.replace(/\r/g, '').trim());
+    // Identifica a linha de cabeçalho verdadeira (a que contém a palavra "Participante")
+    let headerIndex = 0;
+    for (let i = 0; i < lines.length; i++) {
+        if (lines[i].toLowerCase().includes('participante')) {
+            headerIndex = i;
+            break;
+        }
+    }
+
+    // Separa os cabeçalhos (limpando aspas que o Google Sheets costuma colocar)
+    appData.headers = lines[headerIndex].split(',').map(h => h.replace(/\r|"/g, '').trim());
     
-    // Extrai linhas
-    appData.rows = lines.slice(1).map(line => {
-        const values = line.split(',').map(v => v.replace(/\r/g, '').trim());
+    // Identifica as chaves principais dinamicamente
+    const pontuacaoKey = appData.headers.find(h => h.toLowerCase().includes('ponto')) || appData.headers[2];
+    const participanteKey = appData.headers.find(h => h.toLowerCase().includes('participante')) || appData.headers[1];
+
+    // Processa as linhas de dados (ignorando o cabeçalho)
+    let rawRows = lines.slice(headerIndex + 1).map(line => {
+        const values = line.split(',').map(v => v.replace(/\r|"/g, '').trim());
         let rowData = {};
         appData.headers.forEach((header, index) => {
             rowData[header] = values[index] || '-';
@@ -92,9 +105,52 @@ function parseCSV(csv) {
         return rowData;
     });
 
-    // Ordena por pontos (assumindo que a coluna se chama "Pontos")
-    const pontuacaoKey = appData.headers.find(h => h.toLowerCase().includes('ponto')) || appData.headers[2];
+    // 🛑 FILTRO CRUCIAL: Remove o cabeçalho que desceu como dado e linhas sem pontos
+    appData.rows = rawRows.filter(row => {
+        const nome = row[participanteKey];
+        const pontos = parseInt(row[pontuacaoKey]);
+        
+        // O nome não pode ser vazio, não pode ser a palavra "Participante" e os pontos DEVEM ser um número
+        return nome && nome !== '-' && nome.toLowerCase() !== 'participante' && !isNaN(pontos);
+    });
+
+    // Ordenação segura por pontos (do maior para o menor)
     appData.rows.sort((a, b) => parseInt(b[pontuacaoKey]) - parseInt(a[pontuacaoKey]));
+}
+
+// --- Aba 2: Palpites (Alinhamento Correto) ---
+function renderPredictions() {
+    const thead = document.querySelector('#table-palpites thead');
+    const tbody = document.querySelector('#table-palpites tbody');
+    
+    const partKey = appData.headers.find(h => h.toLowerCase().includes('participante')) || appData.headers[1];
+    
+    // Identifica onde os jogos começam (tudo que vier APÓS a coluna de "Pontos")
+    const ptsIndex = appData.headers.findIndex(h => h.toLowerCase().includes('ponto'));
+    const gamesHeaders = appData.headers.slice(ptsIndex + 1); 
+    
+    // Constrói o cabeçalho: Coluna 1 = Participante, Colunas seguintes = Nomes dos Jogos/Placares
+    let theadHTML = `<tr><th>Participante</th>`;
+    gamesHeaders.forEach(game => {
+        theadHTML += `<th>${game}</th>`;
+    });
+    theadHTML += `</tr>`;
+    thead.innerHTML = theadHTML;
+
+    // Preenche as linhas com os palpites abaixo de cada jogo correspondente
+    tbody.innerHTML = '';
+    appData.rows.forEach(row => {
+        let tr = document.createElement('tr');
+        let tdHTML = `<td><strong>${row[partKey]}</strong></td>`;
+        
+        gamesHeaders.forEach(game => {
+            let palpite = row[game] === '-' || !row[game] ? '' : row[game];
+            tdHTML += `<td>${palpite}</td>`;
+        });
+        
+        tr.innerHTML = tdHTML;
+        tbody.appendChild(tr);
+    });
 }
 
 // --- Aba 1: Classificação ---
