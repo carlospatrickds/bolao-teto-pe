@@ -54,10 +54,13 @@ function setupTabs() {
     });
 }
 
-// --- Captura de Dados (Google Sheets CSV) ---
+// --- Captura de Dados (Google Sheets CSV) com prevenção de cache ---
 async function fetchData() {
     try {
-        const response = await fetch(SHEET_URL);
+        // Adiciona um parâmetro de tempo dinâmico para forçar o navegador a buscar os dados novos
+        const cacheBuster = `&nocache=${new Date().getTime()}`;
+        const response = await fetch(SHEET_URL + cacheBuster);
+        
         const csvText = await response.text();
         parseCSV(csvText);
         
@@ -72,7 +75,6 @@ async function fetchData() {
             `<tr><td colspan="3">Erro ao carregar os dados. Verifique o link da planilha.</td></tr>`;
     }
 }
-
 // Parser de CSV com Sanitização
 function parseCSV(csv) {
     // Divide o arquivo em linhas, removendo linhas totalmente vazias
