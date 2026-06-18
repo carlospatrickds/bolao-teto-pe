@@ -175,38 +175,72 @@ h1 {
     text-align: center;
 }
 
-/* Top 3 Cards */
+/* Top 3 Cards - Ajuste do Pódio */
 .top3-container {
     display: flex;
     justify-content: center;
-    gap: 20px;
-    margin-bottom: 2rem;
-    align-items: flex-end;
+    gap: 15px;
+    margin-bottom: 3rem;
+    align-items: flex-end; /* Alinha os blocos pela parte de baixo */
+    min-height: 250px; /* Garante espaço para o card de Ouro crescer */
 }
 
 .card-top {
     background-color: var(--card-bg);
-    padding: 20px;
-    border-radius: 15px;
+    padding: 20px 10px;
+    border-radius: 15px 15px 5px 5px;
     text-align: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    width: 150px;
+    width: 140px;
+    border-top: 8px solid var(--gray); /* Linha grossa no topo */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.05); /* Sombra para cima */
     transition: transform 0.3s;
-    border-top: 5px solid var(--gray);
 }
 
 .card-top:hover {
-    transform: translateY(-10px);
+    transform: translateY(-5px);
 }
 
-.card-top.pos-1 { border-color: var(--yellow); padding-bottom: 40px; }
-.card-top.pos-2 { border-color: var(--gray); padding-bottom: 30px; }
-.card-top.pos-3 { border-color: #CD7F32; padding-bottom: 20px; } /* Bronze */
+/* Tamanhos específicos para criar o efeito escadinha */
+.card-top.pos-1 { 
+    border-color: var(--yellow); 
+    height: 220px; /* O mais alto */
+    z-index: 3;
+    box-shadow: 0 -8px 15px rgba(253, 197, 51, 0.3); /* Brilho amarelo */
+}
 
-.medal { font-size: 2.5rem; margin-bottom: 10px; }
-.top-name { font-weight: 700; font-size: 1.1rem; margin-bottom: 5px; }
-.top-pts { color: var(--primary); font-family: 'Fredoka', sans-serif; }
+.card-top.pos-2 { 
+    border-color: var(--gray); 
+    height: 180px; /* Médio */
+    z-index: 2;
+}
 
+.card-top.pos-3 { 
+    border-color: #CD7F32; /* Bronze */
+    height: 150px; /* O menor */
+    z-index: 1;
+}
+
+/* Textos internos do pódio */
+.card-top .medal { 
+    font-size: 3.5rem; 
+    margin-bottom: 10px; 
+}
+
+.card-top .top-name { 
+    font-weight: 700; 
+    font-size: 1.1rem; 
+    margin-bottom: 5px; 
+    word-wrap: break-word;
+}
+
+.card-top .top-pts { 
+    color: var(--primary); 
+    font-family: 'Fredoka', sans-serif; 
+    font-weight: 600; 
+}
 /* Controles (Busca e Botões) */
 .controls-bar {
     display: flex;
